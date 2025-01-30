@@ -4,8 +4,10 @@
   "main": "app.js",
   "scripts": {
     "test": "NODE_ENV=test jest",
+    "stuff": "node stuff.js",
     "clearTestCache": "jest --clearCache"
   },
+  "type":"commonjs",
   "keywords": [],
   "author": "",
   "license": "ISC",

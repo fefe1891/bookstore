@@ -15,12 +15,14 @@ beforeAll(async () => {
     try {
         console.log(DB_URI);
         db = new Client({ connectionString: DB_URI });
+        console.log("here 1");
         await db.connect();
+        console.log("here 2");
     } catch (err) {
         console.error(err);
         console.log(err.stack);
     }
-}, 70000);
+});
 
 // Sample data
 let book_isbn;
@@ -31,8 +33,8 @@ beforeEach(async () => {
         console.log(DB_URI);
         await db.query("BEGIN");
 
-    let result = await db.query(
-        `INSERT INTO books (
+        let result = await db.query(
+            `INSERT INTO books (
             isbn, amazon_url,
             author,language,
             pages,publisher,
@@ -47,12 +49,32 @@ beforeEach(async () => {
             'my first book', 2008)
     RETURNING isbn`);
 
-    book_isbn = result.rows[0].isbn
+        book_isbn = result.rows[0].isbn
     } catch (err) {
         console.error(err);
         console.log(err.stack);
     }
-}, 70000);
+});
+
+afterEach(async function () {
+    try {
+        console.log(DB_URI);
+        await db.query("ROLLBACK");
+    } catch (err) {
+        console.log(err);
+        console.log(err.stack);
+    }
+});
+
+afterAll(async () => {
+    try {
+        console.log(DB_URI);
+        await db.end();
+    } catch (err) {
+        console.log(err);
+        console.log(err.stack);
+    }
+});
 
 describe("GET /books", function () {
     test("Gets a list of 1 book", async function () {
@@ -82,7 +104,7 @@ describe("POST /books", function () {
     });
 
     test("Prevents creating book without required title", async function () {
-        const response = await request(app).post(`/books`).send({year: 2000});
+        const response = await request(app).post(`/books`).send({ year: 2000 });
         expect(response.statusCode).toBe(400);
     });
 });
@@ -142,26 +164,6 @@ describe("PUT /books/:id", function () {
 describe("DELETE /books/:id", function () {
     test("Deletes a single a book", async function () {
         const response = await request(app).delete(`/books/${book_isbn}`)
-        expect(response.body).toEqual({message: "Book deleted"});
+        expect(response.body).toEqual({ message: "Book deleted" });
     });
 });
-
-afterEach(async function () {
-    try {
-        console.log(DB_URI);
-        await db.query("ROLLBACK");
-    } catch (err) {
-        console.log(err);
-        console.log(err.stack);
-    }
-}, 70000);
-
-afterAll(async () => {
-    try {
-        console.log(DB_URI);
-        await db.end();
-    } catch (err) {
-        console.log(err);
-        console.log(err.stack);
-    }
-}, 70000);
